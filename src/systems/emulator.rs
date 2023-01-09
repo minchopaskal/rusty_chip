@@ -1,33 +1,29 @@
 use bevy::prelude::{Res, ResMut};
 use bevy::time::Time;
-use bevy_pixels::PixelsResource;
+use bevy_pixel_buffer::prelude::*;
 
 use crate::config::*;
 use crate::resources::chip8::*;
 
-pub fn emulator_system(mut pixels_resource: ResMut<PixelsResource>, mut chip8_resource: ResMut<Chip8>, time: Res<Time>) {
-    let frame = pixels_resource.pixels.get_frame_mut();
-    
-    chip8_resource.as_mut().step(time.delta());
-    
+pub fn emulator_system(mut pb: QueryPixelBuffer, mut chip8_resource: ResMut<Chip8>, time: Res<Time>) {
+    if !chip8_resource.paused() {
+        chip8_resource.as_mut().step(time.delta());
+    }
+
     let framebuffer = chip8_resource.display();
 
-    for i in 0..HEIGHT {
-        for j in 0..WIDTH {
-            let x = j / PIXEL_SIZE;
-            let y = i / PIXEL_SIZE;
-            let idx : usize = (y * DISPLAY_WIDTH + x) as usize;
+    pb.frame().per_pixel(|coord, _| {
+        let x = coord.x / PIXEL_SIZE;
+        let y = coord.y / PIXEL_SIZE;
+        let idx : usize = (y * DISPLAY_WIDTH + x) as usize;
 
-            // TODO: try to draw circles instead of rectangle pixels.
-            // Latter check draws a grid.
-            let color: [u8; 4] = if framebuffer[idx].0>0 && i%PIXEL_SIZE>0 && j%PIXEL_SIZE>0 {
-                [255, 255, 255, 255]
-            } else {
-                [0, 0, 0, 255]
-            };
-
-            let idx = ((i * WIDTH + j) * 4) as usize;
-            frame[idx..idx+4].copy_from_slice(&color);
+        let is_grid = coord.x % PIXEL_SIZE == 0 || coord.y % PIXEL_SIZE == 0;
+        
+        // TODO: try to draw circles instead of rectangle pixels.
+        if framebuffer[idx].0>0  && !is_grid {
+            Pixel::WHITE
+        } else {
+            Pixel::BLACK
         }
-    }
+    });
 }

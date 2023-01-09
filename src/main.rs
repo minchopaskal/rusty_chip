@@ -1,7 +1,8 @@
 use std::io::Read;
 
 use bevy::{prelude::*, window::WindowResizeConstraints};
-use bevy_pixels::{PixelsPlugin, PixelsStage};
+use bevy_egui::EguiPlugin;
+use bevy_pixel_buffer::prelude::*;
 
 mod config;
 mod resources;
@@ -9,7 +10,7 @@ mod systems;
 
 use crate::config::*;
 use crate::resources::chip8::*;
-use crate::systems::emulator::*;
+use crate::systems::*;
 
 fn main() -> std::io::Result<()> {
     let args : Vec<String> = std::env::args().collect();
@@ -23,6 +24,11 @@ fn main() -> std::io::Result<()> {
 
     let mut file = std::io::BufReader::new(f);
     file.read(data.as_mut_slice()).expect("File couldn't be read successfully!");
+
+    let pixel_buffer_size = PixelBufferSize {
+        size: UVec2::new(WIDTH, HEIGHT),
+        pixel_size: UVec2::new(1, 1),
+    };
 
     App::new()
         .add_plugins(DefaultPlugins.set(WindowPlugin {
@@ -40,13 +46,12 @@ fn main() -> std::io::Result<()> {
             },
             ..default()
         }))
-        .add_plugin(PixelsPlugin {
-            width: WIDTH,
-            height: HEIGHT,
-            ..default()
-        })
-        .add_system_to_stage(PixelsStage::Draw, emulator_system)
+        .add_plugin(PixelBufferPlugin)
+        .add_plugin(EguiPlugin)
         .insert_resource(Chip8::new(&data, 600))
+        .add_startup_system(pixel_buffer_setup(pixel_buffer_size))
+        .add_system(ui::ui_system)
+        .add_system(emulator::emulator_system)
         .run();
 
     Ok(())

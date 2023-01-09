@@ -6,7 +6,7 @@ use bevy::time::{Timer, TimerMode};
 use crate::config::*;
 
 #[derive(Default, Clone, Copy)]
-pub struct Pixel(pub u8);
+pub struct DisplayPixel(pub u8);
 
 const FONT : [u8; 5 * 16] = [
     0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
@@ -39,7 +39,7 @@ enum State {
 pub struct Chip8 {
     ram: [u8; 4096],
     stack: [u16; 16],
-    display: [Pixel; NUM_PIXELS],
+    display: [DisplayPixel; NUM_PIXELS],
     pc: u16,
     index_register : u16,
     stack_ptr: usize,
@@ -79,7 +79,7 @@ impl Chip8 {
         match itype {
             0 => {
                 if b8 == 0xE0 {
-                    self.display.fill(Pixel::default());
+                    self.display.fill(DisplayPixel::default());
                 } else if b8 == 0xEE {
                     let stack_top = self.stack[self.stack_ptr];
                     self.stack_ptr -= 1;
@@ -137,7 +137,7 @@ impl Chip8 {
         let mut res = Chip8 {
             ram : [0; 4096],
             stack: [0; 16],
-            display : [Pixel::default(); NUM_PIXELS],
+            display : [DisplayPixel::default(); NUM_PIXELS],
             pc: START_OFFSET as u16,
             index_register: 0,
             stack_ptr: 0,
@@ -147,6 +147,11 @@ impl Chip8 {
             clock_hz: clock_hz,
             timer_clock: Timer::new(Duration::from_nanos(SECOND_IN_NS / clock_hz as u64), TimerMode::Repeating),
             timer_60hz: Timer::new(Duration::from_nanos(SECOND_IN_NS / 60), TimerMode::Repeating),
+
+            #[cfg(debug_assertions)]
+            state: State::Paused,
+
+            #[cfg(not(debug_assertions))]
             state: State::Running,
         };
 
@@ -158,8 +163,12 @@ impl Chip8 {
         res
     }
 
-    pub fn display(&self) -> &[Pixel; NUM_PIXELS] {
+    pub fn display(&self) -> &[DisplayPixel; NUM_PIXELS] {
         &self.display
+    }
+
+    pub fn paused(&self) -> bool {
+        self.state == State::Paused
     }
 
     pub fn pause(&mut self) {
