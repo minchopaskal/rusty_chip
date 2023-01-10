@@ -1,16 +1,34 @@
-use bevy::prelude::{Res, ResMut};
-use bevy::time::Time;
+use std::time::Duration;
+
+use bevy::prelude::{ResMut};
+
 use bevy_pixel_buffer::prelude::*;
 
 use crate::config::*;
 use crate::resources::chip8::*;
 
-pub fn emulator_system(mut pb: QueryPixelBuffer, mut chip8_resource: ResMut<Chip8>, time: Res<Time>) {
+pub fn emulator_system(mut pb: QueryPixelBuffer, mut chip8_resource: ResMut<Chip8>, mut beep_resource: ResMut<PlayingSound>) {
+    let mut res = StepResult{ drawn: false, beep: false };
+    
     if !chip8_resource.paused() {
-        chip8_resource.as_mut().step(time.delta());
+        res = chip8_resource.as_mut().step(Duration::from_secs_f64(DELTA_S));
     }
 
-    let framebuffer = chip8_resource.display();
+    if res.beep && !beep_resource.0 {
+        beep_resource.0 = true;
+        // play sound
+    }
+
+    if !res.beep {
+        beep_resource.0 = false;
+        // stop sound
+    }
+
+    if !res.drawn {
+        return;
+    }
+ 
+    let framebuffer = chip8_resource.framebuffer();
 
     pb.frame().per_pixel(|coord, _| {
         let x = coord.x / PIXEL_SIZE;

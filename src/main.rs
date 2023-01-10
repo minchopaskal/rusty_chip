@@ -1,5 +1,9 @@
 use std::io::Read;
 
+
+
+
+use bevy::time::FixedTimestep;
 use bevy::{prelude::*, window::WindowResizeConstraints};
 use bevy_egui::EguiPlugin;
 use bevy_pixel_buffer::prelude::*;
@@ -23,10 +27,10 @@ fn main() -> std::io::Result<()> {
     data.resize(len as usize, 0);
 
     let mut file = std::io::BufReader::new(f);
-    file.read(data.as_mut_slice()).expect("File couldn't be read successfully!");
+    file.read(data.as_mut_slice())?;
 
     let pixel_buffer_size = PixelBufferSize {
-        size: UVec2::new(WIDTH, HEIGHT),
+        size: UVec2::new(DISPLAY_WIDTH * PIXEL_SIZE, DISPLAY_HEIGHT * PIXEL_SIZE),
         pixel_size: UVec2::new(1, 1),
     };
 
@@ -49,9 +53,18 @@ fn main() -> std::io::Result<()> {
         .add_plugin(PixelBufferPlugin)
         .add_plugin(EguiPlugin)
         .insert_resource(Chip8::new(&data, 600))
+        .insert_resource(PlayingSound(false))
         .add_startup_system(pixel_buffer_setup(pixel_buffer_size))
         .add_system(ui::ui_system)
-        .add_system(emulator::emulator_system)
+        .add_system(keyboard::keyboard_system)
+        .add_system_set(
+            SystemSet::new()
+                // We run the emulation at max 2000Hz. Actual clock speed is controlled by UI.
+                .with_run_criteria(FixedTimestep::step(DELTA_S))
+                .with_system(emulator::emulator_system),
+        )
+        // .add_plugin(LogDiagnosticsPlugin::default())
+        // .add_plugin(FrameTimeDiagnosticsPlugin::default())
         .run();
 
     Ok(())

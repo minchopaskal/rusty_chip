@@ -9,7 +9,7 @@
             "type": "lldb",
             "request": "launch",
             "program": "${workspaceRoot}/target/debug/rusty-chip.exe",
-            "args": [ "test/ibm_logo.ch8" ],
+            "args": [ "test/test_opcode.ch8" ],
             "cwd": "${workspaceRoot}",
         },
     ]
