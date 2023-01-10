@@ -8,8 +8,9 @@ edition = "2021"
 [dependencies]
 bevy = { version = "0.9", default_features = false, features = ["bevy_winit", "bevy_audio", "wav"] }
 bevy_egui = "0.18.0"
-bevy_pixel_buffer = "0.3.0"
+bevy_pixel_buffer = { version = "0.3.0", features = ["egui"] }
 rand = "0.8.5"
+rfd = "0.10.0"
 
 # Enable a small amount of optimization in debug mode
 [profile.dev]

@@ -19,7 +19,7 @@ pub fn emulator_system(mut pb: QueryPixelBuffer, mut chip8_resource: ResMut<Chip
         audio.play(asset_server.load("sounds/c_major.wav"));
     }
 
-    if !res.drawn {
+    if !res.drawn && !chip8_resource.restarted() {
         return;
     }
  

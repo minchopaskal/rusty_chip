@@ -63,6 +63,7 @@ pub struct Chip8 {
 
     state: ConsoleState,
     rom_size: usize,
+    restarted: bool,
 
     pub input: [KeyState; NUM_KEYS],
     pub clock_hz: u64,
@@ -89,14 +90,19 @@ impl Chip8 {
         let rows = n as usize; 
         self.registers[0xF] = 0;
         for i in 0..rows {
+            if y + i >= DISPLAY_HEIGHT as usize {
+                break;
+            }
+
             let row = self.ram[self.index_register as usize + i];
+            
             for j in 0..8 {
-                let color = if (row & (1 << ( 8 - j - 1))) > 0 { 1 } else { 0 };
-                let idx = cmp::min(y + i, DISPLAY_HEIGHT as usize - 1) * DISPLAY_WIDTH as usize + cmp::min(x + j, DISPLAY_WIDTH as usize - 1);
-                let current = self.framebuffer[idx].0;
+                let color = if (row & (0x80 >> j)) > 0 { 1 } else { 0 };
+                let idx = (y + i) * DISPLAY_WIDTH as usize + cmp::min(x + j, DISPLAY_WIDTH as usize - 1);
+                let old = self.framebuffer[idx].0;
                 self.framebuffer[idx].0 ^= color;
 
-                if current > 0 && color == 0 {
+                if old > 0 && old != self.framebuffer[idx].0 {
                     self.registers[0xF] = 1;
                 }
             }
@@ -167,12 +173,15 @@ impl Chip8 {
                     },
                     1 => {
                         self.registers[x as usize] = self.registers[x as usize] | self.registers[y as usize];
+                        if !self.super_chip { self.registers[0xF] = 0; }
                     },
                     2 => {
                         self.registers[x as usize] = self.registers[x as usize] & self.registers[y as usize];
+                        if !self.super_chip { self.registers[0xF] = 0; }
                     },
                     3 => {
                         self.registers[x as usize] = self.registers[x as usize] ^ self.registers[y as usize];
+                        if !self.super_chip { self.registers[0xF] = 0; }
                     },
                     4 => {
                         let vx = self.registers[x as usize] as u16;
@@ -191,8 +200,9 @@ impl Chip8 {
                         if !self.super_chip {
                             self.registers[x as usize] = self.registers[y as usize];
                         }
-                        self.registers[0xF] = self.registers[x as usize] & 1;
+                        let vf = self.registers[x as usize] & 0x01;
                         self.registers[x as usize] >>= 1;
+                        self.registers[0xF] = vf;
                     },
                     7 => {
                         let vx = self.registers[x as usize] as i16;
@@ -204,8 +214,9 @@ impl Chip8 {
                         if !self.super_chip {
                             self.registers[x as usize] = self.registers[y as usize];
                         }
-                        self.registers[0xF] = self.registers[x as usize] & 0x80;
+                        let vf = (self.registers[x as usize] & 0x80) >> 7;
                         self.registers[x as usize] <<= 1;
+                        self.registers[0xF] = vf;
                     },
                     _ => {
                         panic!("Unrecognised instruction: 0x{:04x}", instr);
@@ -363,8 +374,7 @@ pub struct StepResult {
 
 const START_PC : usize = 512;
 impl Chip8 {
-    pub fn new(data: &Vec<u8>, clock_hz : u64) -> Chip8 {
-
+    pub fn new(clock_hz : u64) -> Chip8 {
         let mut res = Chip8 {
             ram : [0; 4096],
             stack: [0; 16],
@@ -382,21 +392,35 @@ impl Chip8 {
             input: [KeyState::Released; 16],
             rom_size: 0,
             debug: false,
+            restarted: false,
 
-            #[cfg(debug_assertions)]
             state: ConsoleState::Paused,
-            #[cfg(not(debug_assertions))]
-            state: ConsoleState::Running,
+            //#[cfg(not(debug_assertions))]
         };
 
         // Copy font into memory 050–09F
         res.ram[FONT_RANGE].copy_from_slice(&FONT);
         
+        res
+    }
+
+    pub fn insert_cartridge(&mut self, data: &Vec<u8>) {
+        self.restart();
+
         // Copy program data into memory
-        res.ram[START_PC..(START_PC + data.len())].copy_from_slice(&data);
+        self.ram[START_PC..(START_PC + data.len())].copy_from_slice(&data);
 
-        res.rom_size = data.len();
+        self.rom_size = data.len();
+    }
 
+    pub fn restart(&mut self) {
+        *self = Chip8::new(self.clock_hz);
+        self.restarted = true;
+    }
+
+    pub fn restarted(&mut self) -> bool {
+        let res = self.restarted;
+        self.restarted = false;
         res
     }
 

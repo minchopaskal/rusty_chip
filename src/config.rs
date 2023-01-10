@@ -12,8 +12,8 @@ pub const STACK_SIZE : usize = 16;
 pub const NUM_KEYS : usize = 16;
 
 // Our display
-pub const WIDTH :u32 = DISPLAY_WIDTH * PIXEL_SIZE;
-pub const HEIGHT : u32 = DISPLAY_HEIGHT * PIXEL_SIZE;
+pub const WIDTH :u32 = 1366; // DISPLAY_WIDTH * PIXEL_SIZE;
+pub const HEIGHT : u32 = 768; // DISPLAY_HEIGHT * PIXEL_SIZE;
 
 // Emulation clock
 pub const DELTA_S : f64 = 1.0 / 2000.0;
