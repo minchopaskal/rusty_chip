@@ -1,27 +1,22 @@
 use std::time::Duration;
 
-use bevy::prelude::{ResMut};
+use bevy::prelude::*;
 
 use bevy_pixel_buffer::prelude::*;
 
 use crate::config::*;
 use crate::resources::chip8::*;
 
-pub fn emulator_system(mut pb: QueryPixelBuffer, mut chip8_resource: ResMut<Chip8>, mut beep_resource: ResMut<PlayingSound>) {
+pub fn emulator_system(mut pb: QueryPixelBuffer, mut chip8_resource: ResMut<Chip8>, audio: Res<Audio>, asset_server: Res<AssetServer>) {
     let mut res = StepResult{ drawn: false, beep: false };
     
     if !chip8_resource.paused() {
         res = chip8_resource.as_mut().step(Duration::from_secs_f64(DELTA_S));
     }
 
-    if res.beep && !beep_resource.0 {
-        beep_resource.0 = true;
-        // play sound
-    }
-
-    if !res.beep {
-        beep_resource.0 = false;
-        // stop sound
+    if res.beep {
+        // TODO: It's bad loading it everytime.
+        audio.play(asset_server.load("sounds/c_major.wav"));
     }
 
     if !res.drawn {

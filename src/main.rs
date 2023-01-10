@@ -1,8 +1,5 @@
 use std::io::Read;
 
-
-
-
 use bevy::time::FixedTimestep;
 use bevy::{prelude::*, window::WindowResizeConstraints};
 use bevy_egui::EguiPlugin;
@@ -53,7 +50,6 @@ fn main() -> std::io::Result<()> {
         .add_plugin(PixelBufferPlugin)
         .add_plugin(EguiPlugin)
         .insert_resource(Chip8::new(&data, 600))
-        .insert_resource(PlayingSound(false))
         .add_startup_system(pixel_buffer_setup(pixel_buffer_size))
         .add_system(ui::ui_system)
         .add_system(keyboard::keyboard_system)

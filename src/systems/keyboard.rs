@@ -1,6 +1,8 @@
-use bevy::prelude::{ScanCode, ResMut, Res, Input};
+use std::time::Duration;
+
+use bevy::prelude::{ScanCode, KeyCode, ResMut, Res, Input};
 use crate::resources::chip8::*;
-use crate::config::NUM_KEYS;
+use crate::config::{NUM_KEYS, DELTA_S};
 
 const KEY_MAP : [u32; NUM_KEYS]= [
     45, // 0 => X
@@ -21,7 +23,7 @@ const KEY_MAP : [u32; NUM_KEYS]= [
     47, // F => V
 ];
 
-pub fn keyboard_system(mut chip8_res: ResMut<Chip8>, keys: Res<Input<ScanCode>>) {
+pub fn keyboard_system(mut chip8_res: ResMut<Chip8>, keys: Res<Input<ScanCode>>, keycodes: Res<Input<KeyCode>>) {
     for i in 0..NUM_KEYS {
         if keys.just_released(ScanCode(KEY_MAP[i])) {
             chip8_res.input[i] = KeyState::JustReleased;
@@ -29,5 +31,9 @@ pub fn keyboard_system(mut chip8_res: ResMut<Chip8>, keys: Res<Input<ScanCode>>)
         if keys.pressed(ScanCode(KEY_MAP[i])) {
             chip8_res.input[i] = KeyState::Pressed;
         }
+    }
+
+    if chip8_res.paused() && keycodes.pressed(KeyCode::Space) {
+        chip8_res.step(Duration::from_secs_f64(DELTA_S));
     }
 }

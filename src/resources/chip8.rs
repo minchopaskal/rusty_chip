@@ -463,6 +463,3 @@ impl Chip8 {
         self.timer_clock = Timer::new(Duration::from_nanos(SECOND_IN_NS/clock_hz), TimerMode::Repeating);
     }
 }
-
-#[derive(Resource)]
-pub struct PlayingSound(pub bool);
