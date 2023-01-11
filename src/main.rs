@@ -8,7 +8,7 @@ mod resources;
 mod systems;
 
 use crate::config::*;
-use crate::resources::chip8::*;
+use crate::resources::{chip8::*, beep::*};
 use crate::systems::*;
 
 fn main() -> std::io::Result<()> {
@@ -36,6 +36,7 @@ fn main() -> std::io::Result<()> {
 
         .add_plugin(EguiPlugin)
         .insert_resource(Chip8::new(600))
+        .insert_resource(BeepResource::default())
         .add_plugins(PixelBufferPlugins)
         .add_startup_system(
             PixelBufferBuilder::new()
@@ -43,6 +44,7 @@ fn main() -> std::io::Result<()> {
                 .with_render(false)
                 .setup()
         )
+        .add_startup_system(audio_setup::setup_audio_system)
         .add_system(keyboard::keyboard_system)
         .add_system(ui::ui_system.label("ui"))
         .add_system_set(

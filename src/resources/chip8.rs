@@ -1,5 +1,5 @@
 use std::cmp;
-use std::ops::RangeInclusive;
+use std::ops::Range;
 use std::time::Duration;
 use rand::{thread_rng, Rng};
 
@@ -29,7 +29,7 @@ const FONT : [u8; 5 * 16] = [
     0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
     0xF0, 0x80, 0xF0, 0x80, 0x80  // F
 ];
-const FONT_RANGE : RangeInclusive<usize> = 0x50..=0x9F;
+const FONT_RANGE : Range<usize> = 0x50..0xA0;
 
 const NUM_PIXELS : usize = (DISPLAY_WIDTH * DISPLAY_HEIGHT) as usize;
 
@@ -63,7 +63,7 @@ pub struct Chip8 {
 
     state: ConsoleState,
     rom_size: usize,
-    restarted: bool,
+    reset: bool,
 
     pub input: [KeyState; NUM_KEYS],
     pub clock_hz: u64,
@@ -294,7 +294,7 @@ impl Chip8 {
                         let char = (self.registers[x as usize] & 0xF) as usize;
                         assert!(char <= 0xF);
                         // Each character sprite is represented by 5 bytes.
-                        let addr = self.ram[FONT_RANGE.start() + 5 * char] as u16;
+                        let addr = self.ram[FONT_RANGE.start + 5 * char] as u16;
                         self.index_register = addr;
                     },
                     0x33 => {
@@ -376,23 +376,23 @@ const START_PC : usize = 512;
 impl Chip8 {
     pub fn new(clock_hz : u64) -> Chip8 {
         let mut res = Chip8 {
-            ram : [0; 4096],
-            stack: [0; 16],
+            ram : [0; RAM_SIZE],
+            stack: [0; STACK_SIZE],
             framebuffer : [DisplayPixel::default(); NUM_PIXELS],
             pc: START_PC as u16,
             index_register: 0,
             stack_ptr: 0,
             delay_timer: 0,
             sound_timer: 0,
-            registers: [0; 16],
+            registers: [0; REGISTER_COUNT],
             clock_hz: clock_hz,
             timer_clock: Timer::new(Duration::from_nanos(SECOND_IN_NS / clock_hz as u64), TimerMode::Repeating),
             timer_60hz: Timer::new(Duration::from_nanos(SECOND_IN_NS / 60), TimerMode::Repeating),
             super_chip: true,
-            input: [KeyState::Released; 16],
+            input: [KeyState::Released; NUM_KEYS],
             rom_size: 0,
             debug: false,
-            restarted: false,
+            reset: true,
 
             state: ConsoleState::Paused,
             //#[cfg(not(debug_assertions))]
@@ -405,7 +405,7 @@ impl Chip8 {
     }
 
     pub fn insert_cartridge(&mut self, data: &Vec<u8>) {
-        self.restart();
+        self.reset();
 
         // Copy program data into memory
         self.ram[START_PC..(START_PC + data.len())].copy_from_slice(&data);
@@ -413,14 +413,14 @@ impl Chip8 {
         self.rom_size = data.len();
     }
 
-    pub fn restart(&mut self) {
+    pub fn reset(&mut self) {
         *self = Chip8::new(self.clock_hz);
-        self.restarted = true;
+        self.reset = true;
     }
 
-    pub fn restarted(&mut self) -> bool {
-        let res = self.restarted;
-        self.restarted = false;
+    pub fn is_reset(&mut self) -> bool {
+        let res = self.reset;
+        self.reset = false;
         res
     }
 
@@ -438,6 +438,10 @@ impl Chip8 {
 
     pub fn pc(&self) -> u16 {
         self.pc
+    }
+
+    pub fn sp(&self) -> usize {
+        self.stack_ptr
     }
 
     pub fn rom_sz(&self) -> usize {

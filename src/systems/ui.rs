@@ -6,7 +6,7 @@ use bevy_egui::{egui, EguiContext};
 use bevy_pixel_buffer::query::QueryPixelBuffer;
 use rfd::FileDialog;
 
-use crate::{resources::chip8::*, config::RAM_SIZE};
+use crate::{resources::chip8::*, config::{RAM_SIZE, REGISTER_COUNT}};
 
 pub fn ui_system(mut egui_ctx: ResMut<EguiContext>, mut chip8_res : ResMut<Chip8>, pb: QueryPixelBuffer, time: Res<Time>) {
     let ctx = egui_ctx.ctx_mut();
@@ -18,9 +18,14 @@ pub fn ui_system(mut egui_ctx: ResMut<EguiContext>, mut chip8_res : ResMut<Chip8
                     let file = FileDialog::new()
                         .add_filter("", &["ch8"])
                         .set_directory("test/")
-                        .pick_file().unwrap();
+                        .pick_file();
 
-                    let f = std::fs::File::open(file.as_path()).expect("Invalid filename!");
+                    if file == None {
+                        ui.close_menu();
+                        return;
+                    }
+
+                    let f = std::fs::File::open(file.unwrap().as_path()).expect("Invalid filename!");
                     let len = f.metadata().unwrap().len();
                     
                     let mut data : Vec<u8> = Vec::new();
@@ -30,6 +35,8 @@ pub fn ui_system(mut egui_ctx: ResMut<EguiContext>, mut chip8_res : ResMut<Chip8
                     file.read(data.as_mut_slice()).expect(&format!("Couldn't read file!"));
 
                     chip8_res.insert_cartridge(&data);
+
+                    ui.close_menu();
                 }
             });
         });
@@ -40,6 +47,11 @@ pub fn ui_system(mut egui_ctx: ResMut<EguiContext>, mut chip8_res : ResMut<Chip8
         ui.separator();
 
         ui.horizontal(|ui| {
+            if chip8_res.rom_sz() <= 0 {
+                ui.label("Please open a ROM (.ch8) file!");
+                return;
+            }
+
             if !chip8_res.paused() && ui.button("Pause").clicked() {
                 chip8_res.pause();
             }
@@ -48,6 +60,9 @@ pub fn ui_system(mut egui_ctx: ResMut<EguiContext>, mut chip8_res : ResMut<Chip8
             }
             if chip8_res.paused() && ui.button("Step").clicked() {
                 chip8_res.step(time.delta());
+            }
+            if ui.button("Reset").clicked() {
+                chip8_res.reset();
             }
         });
 
@@ -63,7 +78,7 @@ pub fn ui_system(mut egui_ctx: ResMut<EguiContext>, mut chip8_res : ResMut<Chip8
             ui.label("Changes the behaviour of some instructions.");
         });
 
-        ui.heading("Debug");
+        ui.heading("CHIP8 Inspector");
         ui.separator();
 
         ui.checkbox(&mut chip8_res.debug, "Debug");
@@ -71,13 +86,7 @@ pub fn ui_system(mut egui_ctx: ResMut<EguiContext>, mut chip8_res : ResMut<Chip8
             let pc = chip8_res.pc() as usize;
             ui.label(format!("ROM size: {}", chip8_res.rom_sz()));
             ui.label(format!("PC: {}", pc));
-            ui.label(format!("Stack: {:?}", chip8_res.stack()));
-        
-            let mut ram_cp : [u8; 25] = [0; 25];
-            let rng = cmp::max(pc - 12, 0)..=cmp::min(pc + 12, RAM_SIZE-1);
-            let slice_len = rng.end() - rng.start() + 1;
-            ram_cp[0..slice_len].copy_from_slice(&chip8_res.ram()[rng]);
-            ui.label(format!("RAM: ... {:?} ...", ram_cp));
+            ui.label(format!("SP: {}", chip8_res.sp()));
         }
     });
 
@@ -87,13 +96,26 @@ pub fn ui_system(mut egui_ctx: ResMut<EguiContext>, mut chip8_res : ResMut<Chip8
 
         // show the texture as an image
         ui.image(texture.id, texture.size);
+
+        // TODO: Panel should be only as big as the framebuffer
     });
 
     egui::SidePanel::right("right_panel").show(ctx, |ui| {
-        ui.heading("Right panel");
+        ui.heading("Register Inspector");
+
+        for i in 0..REGISTER_COUNT {
+
+        }
+
+        ui.separator();
+        
+        ui.heading("Stack Inspector");
+        
+        // TODO
     });
 
     egui::TopBottomPanel::bottom("bottom_panel").show(ctx, |ui| {
-        ui.heading("Bottom panel");
+        ui.heading("RAM Inspector");
+        // TODO
     });
 }

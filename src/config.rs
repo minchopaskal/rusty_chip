@@ -8,6 +8,7 @@ pub(crate) const PIXEL_SIZE : u32 = 10;
 // Memory sizes
 pub const RAM_SIZE : usize = 4096;
 pub const STACK_SIZE : usize = 16;
+pub const REGISTER_COUNT : usize = 16;
 // Input
 pub const NUM_KEYS : usize = 16;
 
