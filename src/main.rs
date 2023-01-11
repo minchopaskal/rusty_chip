@@ -8,10 +8,19 @@ mod resources;
 mod systems;
 
 use crate::config::*;
-use crate::resources::{chip8::*, beep::*};
+use crate::resources::{chip8::*, beep::*, config::*};
 use crate::systems::*;
 
 fn main() -> std::io::Result<()> {
+    let args : Vec<String> = std::env::args().collect();
+    let mut debug = false;
+    if args.len() > 1 {
+        if args[1] != "debug" {
+            panic!("Uncrecognised command line argument: {}!", args[1]);
+        }
+        debug = true;
+    }
+
     let pixel_buffer_size = PixelBufferSize {
         size: UVec2::new(DISPLAY_WIDTH * PIXEL_SIZE, DISPLAY_HEIGHT * PIXEL_SIZE),
         pixel_size: UVec2::new(1, 1),
@@ -33,10 +42,12 @@ fn main() -> std::io::Result<()> {
             },
             ..default()
         }))
-
         .add_plugin(EguiPlugin)
         .insert_resource(Chip8::new(600))
         .insert_resource(BeepResource::default())
+        .insert_resource(ConfigResource {
+            debug_ui: debug,
+        })
         .add_plugins(PixelBufferPlugins)
         .add_startup_system(
             PixelBufferBuilder::new()

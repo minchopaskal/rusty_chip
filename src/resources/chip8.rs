@@ -1,5 +1,4 @@
 use std::cmp;
-use std::ops::Range;
 use std::time::Duration;
 use rand::{thread_rng, Rng};
 
@@ -29,7 +28,6 @@ const FONT : [u8; 5 * 16] = [
     0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
     0xF0, 0x80, 0xF0, 0x80, 0x80  // F
 ];
-const FONT_RANGE : Range<usize> = 0x50..0xA0;
 
 const NUM_PIXELS : usize = (DISPLAY_WIDTH * DISPLAY_HEIGHT) as usize;
 
@@ -68,7 +66,6 @@ pub struct Chip8 {
     pub input: [KeyState; NUM_KEYS],
     pub clock_hz: u64,
     pub super_chip: bool,
-    pub debug: bool,
 }
 
 // PRIVATE
@@ -117,18 +114,16 @@ impl Chip8 {
         let b8 = instr & 0x00FF;
         let b12 = instr & 0x0FFF;
 
-        if self.debug {
-            println!("Execute: 0x{:04x}", instr);
-        }
+        println!("Execute: 0x{:04x}", instr);
         
         match itype {
             0 => {
                 if b8 == 0xE0 {
                     self.framebuffer.fill(DisplayPixel::default());
                 } else if b12 == 0x0EE {
-                    let stack_top = self.stack[self.stack_ptr-1];
                     self.stack_ptr -= 1;
-                    self.pc = stack_top;
+                    self.pc = self.stack[self.stack_ptr];
+                    self.stack[self.stack_ptr] = 0;
                 } else {
                     panic!("Unsupported instruction 0x{:04x}!", instr);
                 }
@@ -372,7 +367,6 @@ pub struct StepResult {
     pub beep: bool, // weather or not sound_timer > 0
 }
 
-const START_PC : usize = 512;
 impl Chip8 {
     pub fn new(clock_hz : u64) -> Chip8 {
         let mut res = Chip8 {
@@ -391,7 +385,6 @@ impl Chip8 {
             super_chip: true,
             input: [KeyState::Released; NUM_KEYS],
             rom_size: 0,
-            debug: false,
             reset: true,
 
             state: ConsoleState::Paused,
@@ -428,7 +421,7 @@ impl Chip8 {
         &self.framebuffer
     }
 
-    pub fn ram(&self) -> &[u8; RAM_SIZE] {
+    pub fn ram(&self) -> &[u8] {
         &self.ram
     }
 
@@ -446,6 +439,10 @@ impl Chip8 {
 
     pub fn rom_sz(&self) -> usize {
         self.rom_size
+    }
+
+    pub fn registers(&self) -> &[u8; REGISTER_COUNT] {
+        &self.registers
     }
 
     pub fn paused(&self) -> bool {
