@@ -19,6 +19,10 @@ fn show_central_panel(egui_ctx : &egui::Context, pb: QueryPixelBuffer,) {
     });
 }
 
+/// Draw the emulator's UI.
+/// 
+/// Depending on `ConfigResource::debug_ui` we will draw only the
+/// user configurations and the display or the debugging UI also.
 pub fn ui_system(mut egui_ctx: ResMut<EguiContext>, mut chip8_res : ResMut<Chip8>, mut cfg: ResMut<ConfigResource>, pb: QueryPixelBuffer, time: Res<Time>) {
     let ctx = egui_ctx.ctx_mut();
 

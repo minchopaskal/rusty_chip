@@ -1,26 +1,50 @@
 use std::ops::Range;
 
-// Chip-8's Config
-// Display
+/// Chip-8's Config
+/// Display
 pub const DISPLAY_WIDTH : u32 = 64;
 pub const DISPLAY_HEIGHT : u32 = 32;
 pub const PIXEL_SIZE : u32 = 10;
-// Memory sizes
+
+/// Memory sizes
 pub const RAM_SIZE : usize = 4096;
 pub const STACK_SIZE : usize = 16;
 pub const REGISTER_COUNT : usize = 16;
-// Input
+
+/// Input related
 pub const NUM_KEYS : usize = 16;
 
-// Our display
+/// Window size
 pub const WIDTH :u32 = 1366; // DISPLAY_WIDTH * PIXEL_SIZE;
 pub const HEIGHT : u32 = 768; // DISPLAY_HEIGHT * PIXEL_SIZE;
 
-// Emulation clock
-pub const DELTA_S : f64 = 1.0 / 2000.0;
+/// Emulation maximum clock
+pub const CHIP8_CPU_MAX_CLOCK_HZ : u32 = 2000;
 
-// Starting programm address in Chip8's RAM.
+/// Delta time for each frame in seconds.
+pub const DELTA_S : f64 = 1.0 / CHIP8_CPU_MAX_CLOCK_HZ as f64;
+
+/// Starting programm address in Chip8's RAM.
 pub const START_PC : usize = 0x200;
 
-// Address range for Chip8's font
+/// Font used by Chip8. Change for something more fancy
+const FONT : [u8; 5 * 16] = [
+    0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
+    0x20, 0x60, 0x20, 0x20, 0x70, // 1
+    0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
+    0xF0, 0x10, 0xF0, 0x10, 0xF0, // 3
+    0x90, 0x90, 0xF0, 0x10, 0x10, // 4
+    0xF0, 0x80, 0xF0, 0x10, 0xF0, // 5
+    0xF0, 0x80, 0xF0, 0x90, 0xF0, // 6
+    0xF0, 0x10, 0x20, 0x40, 0x40, // 7
+    0xF0, 0x90, 0xF0, 0x90, 0xF0, // 8
+    0xF0, 0x90, 0xF0, 0x10, 0xF0, // 9
+    0xF0, 0x90, 0xF0, 0x90, 0x90, // A
+    0xE0, 0x90, 0xE0, 0x90, 0xE0, // B
+    0xF0, 0x80, 0x80, 0x80, 0xF0, // C
+    0xE0, 0x90, 0x90, 0x90, 0xE0, // D
+    0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
+    0xF0, 0x80, 0xF0, 0x80, 0x80  // F
+];
+/// Address range for Chip8's font
 pub const FONT_RANGE : Range<usize> = 0x50..0xA0;

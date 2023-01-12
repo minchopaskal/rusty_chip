@@ -4,6 +4,23 @@ use bevy::prelude::{ScanCode, KeyCode, ResMut, Res, Input};
 use crate::resources::chip8::*;
 use crate::config::{NUM_KEYS, DELTA_S};
 
+/// Key mapping from real keyboard to CHIP-8s input.
+/// 
+/// Mapping uses scancodes in order to support different
+/// keyboard layouts.
+/// 
+/// For the QWERTY layout the mapping looks like this:
+/// 
+///      (real)               (chip-8)
+/// -----------------    -----------------
+/// | 1 | 2 | 3 | 4 |    | 1 | 2 | 3 | C |
+/// -----------------    -----------------
+/// | Q | W | R | T |    | 4 | 5 | 6 | D |
+/// ----------------- -> -----------------
+/// | A | S | D | F |    | 7 | 8 | 9 | E |
+/// -----------------    -----------------
+/// | Z | X | C | V |    | A | 0 | B | F |
+/// -----------------    -----------------
 const KEY_MAP : [u32; NUM_KEYS]= [
     45, // 0 => X
     2,  // 1 => 1
@@ -23,6 +40,7 @@ const KEY_MAP : [u32; NUM_KEYS]= [
     47, // F => V
 ];
 
+/// Simple input handling system
 pub fn keyboard_system(mut chip8_res: ResMut<Chip8>, keys: Res<Input<ScanCode>>, keycodes: Res<Input<KeyCode>>) {
     for i in 0..NUM_KEYS {
         if keys.just_released(ScanCode(KEY_MAP[i])) {

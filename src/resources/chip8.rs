@@ -7,36 +7,26 @@ use bevy::time::{Timer, TimerMode};
 
 use crate::config::*;
 
+/// CHIP-8 display pixel's representation.
 #[derive(Default, Clone, Copy)]
 pub struct DisplayPixel(pub u8);
 
-const FONT : [u8; 5 * 16] = [
-    0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
-    0x20, 0x60, 0x20, 0x20, 0x70, // 1
-    0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
-    0xF0, 0x10, 0xF0, 0x10, 0xF0, // 3
-    0x90, 0x90, 0xF0, 0x10, 0x10, // 4
-    0xF0, 0x80, 0xF0, 0x10, 0xF0, // 5
-    0xF0, 0x80, 0xF0, 0x90, 0xF0, // 6
-    0xF0, 0x10, 0x20, 0x40, 0x40, // 7
-    0xF0, 0x90, 0xF0, 0x90, 0xF0, // 8
-    0xF0, 0x90, 0xF0, 0x10, 0xF0, // 9
-    0xF0, 0x90, 0xF0, 0x90, 0x90, // A
-    0xE0, 0x90, 0xE0, 0x90, 0xE0, // B
-    0xF0, 0x80, 0x80, 0x80, 0xF0, // C
-    0xE0, 0x90, 0x90, 0x90, 0xE0, // D
-    0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
-    0xF0, 0x80, 0xF0, 0x80, 0x80  // F
-];
-
 const NUM_PIXELS : usize = (DISPLAY_WIDTH * DISPLAY_HEIGHT) as usize;
 
+/// CHIP-8 state. If paused the user can step through
+/// the instructions one by one.
 #[derive(PartialEq)]
 enum ConsoleState {
     Paused,
     Running,
 }
 
+/// CHIP-8 key state.
+/// 
+/// There is a peculiarity in the instruction FX0A(Get key).
+/// It busy waits until a key is pressed, but only detects it
+/// after a key was pressed and then released.
+/// Thus we need the JustReleased state.
 #[derive(PartialEq, Clone, Copy)]
 pub enum KeyState {
     Released,
@@ -44,6 +34,10 @@ pub enum KeyState {
     JustReleased,
 }
 
+/// CHIP-8's state.
+/// 
+/// Nothing fancy. Most of it you find on every CHIP-8
+/// emulator tutorial. Added stuff is for user-friendliness.
 #[derive(Resource)]
 pub struct Chip8 {
     ram: [u8; RAM_SIZE],
@@ -71,8 +65,8 @@ pub struct Chip8 {
     pub super_chip: bool,
 }
 
-// PRIVATE
 impl Chip8 {
+    /// Read the next instruction and increase the program counter.
     fn fetch(&mut self) -> u16 {
         let fst = self.ram[self.pc as usize] as u16;
         self.pc += 1;
@@ -82,6 +76,15 @@ impl Chip8 {
         (fst << 8) | snd
     }
 
+    /// Draw the sprite specified by the instruction.
+    /// 
+    /// # Returns true if the display should be updated. False, otherwise.
+    /// 
+    /// If `self.reduce_flicker` is true it checks if we are just erasing a sprite
+    /// (i.e all the pixels that are changed were 1 to 0 flips) and if that is the case
+    /// we don't update the display.
+    /// `self.reduce_flicker` being false means we always want to update the display after
+    /// the instruction was called.
     fn display(&mut self, x: u16, y: u16, n: u16) -> bool {
         // Assume DISPLAY_* are powers of 2. 
         // Eqiv. to (X % DISPLAY_*)
@@ -124,6 +127,7 @@ impl Chip8 {
         !self.reduce_flicker || drawn
     }
 
+    /// Parse an instruction.
     fn execute(&mut self, instr: u16) -> bool {
         let itype = (instr & 0xF000) >> 12;
         let x = (instr & 0x0F00) >> 8;
@@ -383,7 +387,10 @@ impl Chip8 {
 
 const SECOND_IN_NS : u64 = 1000000000;
 
-// PUBLIC
+/// Result of calling `Chip8::step()`
+/// 
+/// `drawn` means we should update the screen
+/// `beep` means we should play the beep sound
 pub struct StepResult {
     pub drawn: bool, // weather or not we executed a draw instruction
     pub beep: bool, // weather or not sound_timer > 0
@@ -422,6 +429,7 @@ impl Chip8 {
         res
     }
 
+    /// Load a ROM into CHIP-8's RAM.
     pub fn insert_cartridge(&mut self, data: &Vec<u8>) {
         self.reset();
 
@@ -431,6 +439,7 @@ impl Chip8 {
         self.rom_size = data.len();
     }
 
+    /// Reset all the state. A new ROM should be loaded.
     pub fn reset(&mut self) {
         *self = Chip8::new(self.clock_hz, self.debug);
         self.reset = true;
@@ -494,6 +503,11 @@ impl Chip8 {
         self.state = ConsoleState::Running;
     }
 
+    /// Fetch, decode and execute the next instruction.
+    /// 
+    /// Since we call this function more times than the cpu clock
+    /// we have a timer to check if it's time to actually process
+    /// the next instruction.
     pub fn step(&mut self, delta: Duration) -> StepResult {
         self.timer_clock.tick(delta);
         self.timer_60hz.tick(delta);
@@ -513,6 +527,10 @@ impl Chip8 {
         StepResult { drawn: drawn, beep: self.state == ConsoleState::Running && self.sound_timer > 0 }
     }
 
+    /// Change the CPU clock.
+    /// 
+    /// Some games may need a higher clock speed, others may be
+    /// more playable at lower than the default.
     pub fn change_clock(&mut self, clock_hz: u64) {
         if clock_hz == self.clock_hz {
             return;

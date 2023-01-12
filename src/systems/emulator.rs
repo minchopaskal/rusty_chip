@@ -11,7 +11,9 @@ use crate::resources::config::*;
 use crate::resources::chip8::*;
 use crate::resources::timer::*;
 
-const CIRCLE_MATRIX: [[u8; 10]; 10] = [
+/// Simple 10x10 matrix representing a circular pixel.
+/// More efficient than calculating it.
+const CIRCLE_MATRIX: [[u8; PIXEL_SIZE as usize]; PIXEL_SIZE as usize] = [
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 1, 1, 1, 1, 0, 0, 0],
     [0, 0, 1, 1, 1, 1, 1, 1, 0, 0],
@@ -24,6 +26,15 @@ const CIRCLE_MATRIX: [[u8; 10]; 10] = [
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 ];
 
+/// Step through chip-8's instructions and display the result.
+/// 
+/// Drawing happens at 60FPS, unless the `ConfigResouce::reduce_flicker`
+/// option is enabled. The latter case updates the framebuffer only when
+/// a new change happens.
+/// 
+/// The emulator system is called `CHIP8_CPU_MAX_CLOCK_HZ` times per second,
+/// where as the `Chip8::step` function is only called at the specified by
+/// the user clock.
 pub fn emulator_system(
     mut pb: QueryPixelBuffer,
     mut chip8_resource: ResMut<Chip8>,
