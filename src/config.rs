@@ -28,7 +28,7 @@ pub const DELTA_S : f64 = 1.0 / CHIP8_CPU_MAX_CLOCK_HZ as f64;
 pub const START_PC : usize = 0x200;
 
 /// Font used by Chip8. Change for something more fancy
-const FONT : [u8; 5 * 16] = [
+pub const FONT : [u8; 5 * 16] = [
     0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
     0x20, 0x60, 0x20, 0x20, 0x70, // 1
     0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2

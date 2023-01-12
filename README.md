@@ -17,6 +17,9 @@ A binary for CHIP-8 emulation. Has:
 * Configurations:
   * Choose between `CHIP-8` or `Super-CHIP` instruction behaviour.
   * Set the CPU clock from 1 to 2000 Hz.
+  * Square or circular pixels
+  * Grid over square pixels
+  * Two ways to reduce flickering - either remove it or fade erased pixels.
 
 # How
 
