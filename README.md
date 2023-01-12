@@ -43,8 +43,8 @@ cargo run --release debug
 
 Possible improvements would be:
 - [ ] Better visuals
-  - [ ] Reduced flickering - non at all or fading effect
-  - [ ] Configurable pixel size, color and shape
+  - [x] Reduced flickering - non at all or fading effect
+  - [ ] Configurable pixel size, color ~~and shape~~
 - [ ] Editable register, PC, RAM, etc. values
 - [ ] Integrated text editor for editing and testing chip-8 programs
 
