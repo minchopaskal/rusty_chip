@@ -1,3 +1,7 @@
+use std::time::Duration;
+
+#[allow(unused_imports)]
+use bevy::diagnostic::{LogDiagnosticsPlugin, FrameTimeDiagnosticsPlugin};
 use bevy::time::FixedTimestep;
 use bevy::{prelude::*, window::WindowResizeConstraints};
 use bevy_egui::EguiPlugin;
@@ -8,7 +12,7 @@ mod resources;
 mod systems;
 
 use crate::config::*;
-use crate::resources::{chip8::*, beep::*, config::*};
+use crate::resources::{chip8::*, beep::*, config::*, timer::*};
 use crate::systems::*;
 
 fn main() -> std::io::Result<()> {
@@ -43,11 +47,16 @@ fn main() -> std::io::Result<()> {
             ..default()
         }))
         .add_plugin(EguiPlugin)
-        .insert_resource(Chip8::new(600))
+        .insert_resource(Chip8::new(600, debug))
         .insert_resource(BeepResource::default())
         .insert_resource(ConfigResource {
             debug_ui: debug,
+            show_grid: false,
+            trace: false,
+            circle_pixels: false,
+            reduce_flicker: false,
         })
+        .insert_resource(DrawTimer { timer: Timer::new(Duration::from_secs_f64(1.0/120.0), TimerMode::Repeating)})
         .add_plugins(PixelBufferPlugins)
         .add_startup_system(
             PixelBufferBuilder::new()

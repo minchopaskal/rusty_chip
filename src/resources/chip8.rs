@@ -62,6 +62,9 @@ pub struct Chip8 {
     state: ConsoleState,
     rom_size: usize,
     reset: bool,
+    debug: bool,
+    trace: bool,
+    reduce_flicker: bool,
 
     pub input: [KeyState; NUM_KEYS],
     pub clock_hz: u64,
@@ -79,13 +82,14 @@ impl Chip8 {
         (fst << 8) | snd
     }
 
-    fn display(&mut self, x: u16, y: u16, n: u16) {
+    fn display(&mut self, x: u16, y: u16, n: u16) -> bool {
         // Assume DISPLAY_* are powers of 2. 
         // Eqiv. to (X % DISPLAY_*)
         let x = (self.registers[x as usize] & (DISPLAY_WIDTH-1) as u8) as usize;
         let y = (self.registers[y as usize] & (DISPLAY_HEIGHT-1) as u8) as usize;
         let rows = n as usize; 
         self.registers[0xF] = 0;
+        let mut drawn = false;
         for i in 0..rows {
             if y + i >= DISPLAY_HEIGHT as usize {
                 break;
@@ -97,16 +101,30 @@ impl Chip8 {
                 let color = if (row & (0x80 >> j)) > 0 { 1 } else { 0 };
                 let idx = (y + i) * DISPLAY_WIDTH as usize + cmp::min(x + j, DISPLAY_WIDTH as usize - 1);
                 let old = self.framebuffer[idx].0;
-                self.framebuffer[idx].0 ^= color;
 
-                if old > 0 && old != self.framebuffer[idx].0 {
+                if old == 255 {
+                    self.framebuffer[idx].0 = if color == 0 {
+                        255
+                    } else if self.trace {
+                        128
+                    } else {
+                        0
+                    }
+                } else if color == 1 {
+                    self.framebuffer[idx].0 = 255;
+                    drawn = true;
+                }
+
+                if old == 255 && self.framebuffer[idx].0 < 255 {
                     self.registers[0xF] = 1;
                 }
             }
         }
+
+        !self.reduce_flicker || drawn
     }
 
-    fn execute(&mut self, instr: u16) {
+    fn execute(&mut self, instr: u16) -> bool {
         let itype = (instr & 0xF000) >> 12;
         let x = (instr & 0x0F00) >> 8;
         let y = (instr & 0x00F0) >> 4;
@@ -114,8 +132,11 @@ impl Chip8 {
         let b8 = instr & 0x00FF;
         let b12 = instr & 0x0FFF;
 
-        println!("Execute: 0x{:04x}", instr);
-        
+        if self.debug {
+            println!("Execute: 0x{:04x}", instr);
+        }
+
+        let mut drawn = false;
         match itype {
             0 => {
                 if b8 == 0xE0 {
@@ -239,7 +260,7 @@ impl Chip8 {
                 self.registers[x as usize] = num & b8 as u8;
             }
             0xD => {
-                self.display(x, y, b4);
+                drawn = self.display(x, y, b4);
             },
             0xE => {
                 if b8 == 0x9E {
@@ -356,6 +377,7 @@ impl Chip8 {
             }
         }
 
+        drawn
     }
 }
 
@@ -368,7 +390,7 @@ pub struct StepResult {
 }
 
 impl Chip8 {
-    pub fn new(clock_hz : u64) -> Chip8 {
+    pub fn new(clock_hz : u64, debug: bool) -> Chip8 {
         let mut res = Chip8 {
             ram : [0; RAM_SIZE],
             stack: [0; STACK_SIZE],
@@ -386,6 +408,9 @@ impl Chip8 {
             input: [KeyState::Released; NUM_KEYS],
             rom_size: 0,
             reset: true,
+            debug: debug,
+            trace: false,
+            reduce_flicker: false,
 
             state: ConsoleState::Paused,
             //#[cfg(not(debug_assertions))]
@@ -407,7 +432,7 @@ impl Chip8 {
     }
 
     pub fn reset(&mut self) {
-        *self = Chip8::new(self.clock_hz);
+        *self = Chip8::new(self.clock_hz, self.debug);
         self.reset = true;
     }
 
@@ -419,6 +444,10 @@ impl Chip8 {
 
     pub fn framebuffer(&self) -> &[DisplayPixel; NUM_PIXELS] {
         &self.framebuffer
+    }
+
+    pub fn framebuffer_mut(&mut self) -> &mut [DisplayPixel; NUM_PIXELS] {
+        &mut self.framebuffer
     }
 
     pub fn ram(&self) -> &[u8] {
@@ -449,6 +478,14 @@ impl Chip8 {
         self.state == ConsoleState::Paused
     }
 
+    pub fn set_trace(&mut self, trace: bool) {
+        self.trace = trace;
+    }
+
+    pub fn set_reduce_flicker(&mut self, reduce: bool) {
+        self.reduce_flicker = reduce;
+    }
+
     pub fn pause(&mut self) {
         self.state = ConsoleState::Paused;
     }
@@ -464,10 +501,7 @@ impl Chip8 {
         let mut drawn = false;
         if self.state == ConsoleState::Paused || self.timer_clock.just_finished() {
             let instr = self.fetch();
-            if instr & 0xF000 == 0xD000 {
-                drawn = true;
-            }
-            self.execute(instr);
+            drawn = self.execute(instr);
         }
 
         if self.state == ConsoleState::Paused || self.timer_60hz.just_finished() {

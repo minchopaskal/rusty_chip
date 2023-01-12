@@ -19,7 +19,7 @@ fn show_central_panel(egui_ctx : &egui::Context, pb: QueryPixelBuffer,) {
     });
 }
 
-pub fn ui_system(mut egui_ctx: ResMut<EguiContext>, mut chip8_res : ResMut<Chip8>, pb: QueryPixelBuffer, time: Res<Time>, cfg: Res<ConfigResource>) {
+pub fn ui_system(mut egui_ctx: ResMut<EguiContext>, mut chip8_res : ResMut<Chip8>, mut cfg: ResMut<ConfigResource>, pb: QueryPixelBuffer, time: Res<Time>) {
     let ctx = egui_ctx.ctx_mut();
 
     egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
@@ -82,6 +82,28 @@ pub fn ui_system(mut egui_ctx: ResMut<EguiContext>, mut chip8_res : ResMut<Chip8
         ui.checkbox(&mut chip8_res.super_chip, "SuperChip/Chip-48 behaviour").on_hover_ui(|ui| {
             ui.label("Changes the behaviour of some instructions.");
         });
+
+        ui.checkbox(&mut cfg.circle_pixels, "Circular pixels");
+
+        if !cfg.circle_pixels {
+            ui.checkbox(&mut cfg.show_grid, "Show grid");
+        }
+
+        if !cfg.reduce_flicker {
+            ui.checkbox(&mut cfg.trace, "Fading effect")
+                .on_hover_ui(|ui| {
+                    ui.label("Phosphorus CRT-style effect to mitigate flicker.");
+                });
+            chip8_res.set_trace(cfg.trace);
+        }
+
+        if !cfg.trace {
+            ui.checkbox(&mut cfg.reduce_flicker, "Reduce flickering")
+                .on_hover_ui(|ui| {
+                    ui.label("Reduce flickering by ignoring erase draws.");
+                });
+            chip8_res.set_reduce_flicker(cfg.reduce_flicker);
+        }
 
         let mut clock_hz = chip8_res.clock_hz;
         ui.add(egui::Slider::new(&mut clock_hz, 1..=2000).text("Cpu clock in Hz"));
