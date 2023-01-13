@@ -3,6 +3,8 @@ use std::time::Duration;
 use bevy::{prelude::{ScanCode, KeyCode, ResMut, Res, Input, EventReader}, input::keyboard::KeyboardInput};
 use crate::{config::{NUM_KEYS, DELTA_S}, resources::chip8::{Chip8, KeyState}};
 
+use scancode::Scancode;
+
 /// Key mapping from real keyboard to CHIP-8s input.
 /// 
 /// Mapping uses scancodes in order to support different
@@ -20,23 +22,42 @@ use crate::{config::{NUM_KEYS, DELTA_S}, resources::chip8::{Chip8, KeyState}};
 /// -----------------    -----------------
 /// | Z | X | C | V |    | A | 0 | B | F |
 /// -----------------    -----------------
-const KEY_MAP : [u32; NUM_KEYS]= [
-    45, // 0 => X
-    2,  // 1 => 1
-    3,  // 2 => 2
-    4,  // 3 => 3
-    16, // 4 => Q
-    17, // 5 => W
-    18, // 6 => E
-    30, // 7 => A
-    31, // 8 => S
-    32, // 9 => D
-    44, // A => Z
-    46, // B => C
-    5,  // C => 4
-    19, // D => R
-    33, // E => F
-    47, // F => V
+// const KEY_MAP : [u32; NUM_KEYS]= [
+//     45, // 0 => X
+//     2,  // 1 => 1
+//     3,  // 2 => 2
+//     4,  // 3 => 3
+//     16, // 4 => Q
+//     17, // 5 => W
+//     18, // 6 => E
+//     30, // 7 => A
+//     31, // 8 => S
+//     32, // 9 => D
+//     44, // A => Z
+//     46, // B => C
+//     5,  // C => 4
+//     19, // D => R
+//     33, // E => F
+//     47, // F => V
+// ];
+
+const KEY_MAP : [Scancode; NUM_KEYS]= [
+    Scancode::X, // 0 => X
+    Scancode::Num1,  // 1 => 1
+    Scancode::Num2,  // 2 => 2
+    Scancode::Num3,  // 3 => 3
+    Scancode::Q, // 4 => Q
+    Scancode::W, // 5 => W
+    Scancode::E, // 6 => E
+    Scancode::A, // 7 => A
+    Scancode::S, // 8 => S
+    Scancode::D, // 9 => D
+    Scancode::Z, // A => Z
+    Scancode::C, // B => C
+    Scancode::Num4,  // C => 4
+    Scancode::R, // D => R
+    Scancode::F, // E => F
+    Scancode::V, // F => V
 ];
 
 /// Simple input handling system
@@ -51,18 +72,23 @@ pub fn keyboard_system(
     for ev in key_evr.iter() {
         match ev.state {
             ButtonState::Released => {
-                println!("Key release: {:?} ({})", ev.key_code, ev.scan_code);
+                if let Some(sc ) = Scancode::new(ev.scan_code as u8) {
+                    for i in 0..NUM_KEYS {
+                        if sc == KEY_MAP[i] {
+                            chip8_res.input[i] = KeyState::JustReleased;
+                        }
+                    }
+                }
             }
-            _ => {}
-        }
-    }
-
-    for i in 0..NUM_KEYS {
-        if keys.just_released(ScanCode(KEY_MAP[i])) {
-            chip8_res.input[i] = KeyState::JustReleased;
-        }
-        if keys.pressed(ScanCode(KEY_MAP[i])) {
-            chip8_res.input[i] = KeyState::Pressed;
+            ButtonState::Pressed => {
+                if let Some(sc ) = Scancode::new(ev.scan_code as u8) {
+                    for i in 0..NUM_KEYS {
+                        if sc == KEY_MAP[i] {
+                            chip8_res.input[i] = KeyState::Pressed;
+                        }
+                    }
+                }
+            }
         }
     }
 

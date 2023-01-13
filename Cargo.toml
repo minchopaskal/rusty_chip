@@ -12,6 +12,7 @@ bevy_pixel_buffer = { version = "0.3.0", features = ["egui"] }
 rand = "0.8.5"
 rayon = "1.6.1"
 rfd = "0.10.0"
+scancode = "0.1.2"
 
 # Enable a small amount of optimization in debug mode
 [profile.dev]
