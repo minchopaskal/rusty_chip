@@ -1,11 +1,11 @@
-use std::io::Read;
+use std::{io::Read};
 
 use bevy::{prelude::{Res, ResMut, Time}};
 use bevy_egui::{egui::{self, RichText, TextStyle, Color32}, EguiContext};
 use bevy_pixel_buffer::query::QueryPixelBuffer;
-use rfd::FileDialog;
+use rfd::{FileDialog};
 
-use crate::{resources::{chip8::*, config::*}, config::*};
+use crate::{resources::{chip8::Chip8, config::ConfigResource}, config::{REGISTER_COUNT, FONT_RANGE, START_PC}};
 
 fn show_central_panel(egui_ctx : &egui::Context, pb: QueryPixelBuffer,) {
     egui::CentralPanel::default().show(egui_ctx, |ui| {

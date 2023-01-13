@@ -6,14 +6,16 @@ use bevy::time::FixedTimestep;
 use bevy::{prelude::*, window::WindowResizeConstraints};
 use bevy_egui::EguiPlugin;
 use bevy_pixel_buffer::prelude::*;
+use config::{DISPLAY_WIDTH, PIXEL_SIZE, DISPLAY_HEIGHT, WIDTH, HEIGHT, DELTA_S};
+use resources::beep::BeepResource;
+use resources::chip8::Chip8;
+use resources::config::ConfigResource;
+use resources::timer::DrawTimer;
+use systems::{audio_setup, keyboard, ui, emulator};
 
 mod config;
 mod resources;
 mod systems;
-
-use crate::config::*;
-use crate::resources::{chip8::*, beep::*, config::*, timer::*};
-use crate::systems::*;
 
 fn main() -> std::io::Result<()> {
     let args : Vec<String> = std::env::args().collect();

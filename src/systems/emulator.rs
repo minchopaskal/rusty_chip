@@ -5,11 +5,7 @@ use bevy::prelude::*;
 use bevy_pixel_buffer::prelude::*;
 use rayon::prelude::*;
 
-use crate::config::*;
-use crate::resources::beep::*;
-use crate::resources::config::*;
-use crate::resources::chip8::*;
-use crate::resources::timer::*;
+use crate::{config::{PIXEL_SIZE, DELTA_S, DISPLAY_WIDTH}, resources::{chip8::{Chip8, StepResult}, timer::DrawTimer, beep::BeepResource, config::ConfigResource}};
 
 /// Simple 10x10 matrix representing a circular pixel.
 /// More efficient than calculating it.

@@ -31,16 +31,22 @@ To get my hands dirty with `rust` and `bevy`.
 
 # Usage
 
+If you don't have rust get the latest version from here https://www.rust-lang.org/
+
 In order to use the emulator just for playing simply:
 
 ```
-cargo run --release
+cargo run
 ```
 
 If you also want to use it for debuggin you can call it like this:
 ```
-cargo run --release debug
+cargo run debug
 ```
+
+**NOTE** for MacOS users:
+
+Bevy uses the [`wgpu`](https://wgpu.rs/) crate as a rendering backend and the current default backend API is Vulkan. This would most probably not work for you so you can change the `WGPU_BACKEND` environment variable to `"metal"` located inside `.cargo/config.toml`.
 
 # TODO
 

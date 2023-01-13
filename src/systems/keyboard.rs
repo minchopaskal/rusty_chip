@@ -1,8 +1,7 @@
 use std::time::Duration;
 
 use bevy::prelude::{ScanCode, KeyCode, ResMut, Res, Input};
-use crate::resources::chip8::*;
-use crate::config::{NUM_KEYS, DELTA_S};
+use crate::{config::{NUM_KEYS, DELTA_S}, resources::chip8::{Chip8, KeyState}};
 
 /// Key mapping from real keyboard to CHIP-8s input.
 /// 

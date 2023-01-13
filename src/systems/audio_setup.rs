@@ -1,5 +1,6 @@
 use bevy::prelude::*;
-use crate::resources::beep::*;
+
+use crate::resources::beep::BeepResource;
 
 /// Load CHIP-8's beep sound in bevy.
 pub fn setup_audio_system(asset_server: Res<AssetServer>, mut beep_source : ResMut<BeepResource>) {

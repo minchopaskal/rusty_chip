@@ -5,7 +5,7 @@ use rand::{thread_rng, Rng};
 use bevy::prelude::Resource;
 use bevy::time::{Timer, TimerMode};
 
-use crate::config::*;
+use crate::config::{DISPLAY_HEIGHT, DISPLAY_WIDTH, RAM_SIZE, STACK_SIZE, NUM_KEYS, FONT_RANGE, START_PC, REGISTER_COUNT, FONT};
 
 /// CHIP-8 display pixel's representation.
 #[derive(Default, Clone, Copy)]
