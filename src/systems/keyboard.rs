@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use bevy::prelude::{ScanCode, KeyCode, ResMut, Res, Input};
+use bevy::{prelude::{ScanCode, KeyCode, ResMut, Res, Input, EventReader}, input::keyboard::KeyboardInput};
 use crate::{config::{NUM_KEYS, DELTA_S}, resources::chip8::{Chip8, KeyState}};
 
 /// Key mapping from real keyboard to CHIP-8s input.
@@ -40,7 +40,23 @@ const KEY_MAP : [u32; NUM_KEYS]= [
 ];
 
 /// Simple input handling system
-pub fn keyboard_system(mut chip8_res: ResMut<Chip8>, keys: Res<Input<ScanCode>>, keycodes: Res<Input<KeyCode>>) {
+pub fn keyboard_system(
+    mut chip8_res: ResMut<Chip8>,
+    keys: Res<Input<ScanCode>>,
+    keycodes: Res<Input<KeyCode>>,
+    mut key_evr: EventReader<KeyboardInput>
+) {
+    use bevy::input::ButtonState;
+
+    for ev in key_evr.iter() {
+        match ev.state {
+            ButtonState::Released => {
+                println!("Key release: {:?} ({})", ev.key_code, ev.scan_code);
+            }
+            _ => {}
+        }
+    }
+
     for i in 0..NUM_KEYS {
         if keys.just_released(ScanCode(KEY_MAP[i])) {
             chip8_res.input[i] = KeyState::JustReleased;
