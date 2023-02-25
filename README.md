@@ -36,12 +36,12 @@ If you don't have rust get the latest version from here https://www.rust-lang.or
 In order to use the emulator just for playing simply:
 
 ```
-cargo run
+cargo run --release
 ```
 
 If you also want to use it for debuggin you can call it like this:
 ```
-cargo run debug
+cargo run debug --release
 ```
 
 **NOTE** for MacOS users:
