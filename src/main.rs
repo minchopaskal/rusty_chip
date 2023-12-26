@@ -1,24 +1,23 @@
 use std::time::Duration;
 
-#[allow(unused_imports)]
-use bevy::diagnostic::{LogDiagnosticsPlugin, FrameTimeDiagnosticsPlugin};
+use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
 use bevy::time::FixedTimestep;
 use bevy::{prelude::*, window::WindowResizeConstraints};
 use bevy_egui::EguiPlugin;
 use bevy_pixel_buffer::prelude::*;
-use config::{DISPLAY_WIDTH, PIXEL_SIZE, DISPLAY_HEIGHT, WIDTH, HEIGHT, DELTA_S};
+use config::{DELTA_S, DISPLAY_HEIGHT, DISPLAY_WIDTH, HEIGHT, PIXEL_SIZE, WIDTH};
 use resources::beep::BeepResource;
 use resources::chip8::Chip8;
 use resources::config::ConfigResource;
 use resources::timer::DrawTimer;
-use systems::{audio_setup, keyboard, ui, emulator};
+use systems::{audio_setup, emulator, keyboard, ui};
 
 mod config;
 mod resources;
 mod systems;
 
 fn main() -> std::io::Result<()> {
-    let args : Vec<String> = std::env::args().collect();
+    let args: Vec<String> = std::env::args().collect();
     let mut debug = false;
     if args.len() > 1 {
         if args[1] != "debug" {
@@ -58,13 +57,15 @@ fn main() -> std::io::Result<()> {
             circle_pixels: false,
             reduce_flicker: false,
         })
-        .insert_resource(DrawTimer { timer: Timer::new(Duration::from_secs_f64(1.0/120.0), TimerMode::Repeating)})
+        .insert_resource(DrawTimer {
+            timer: Timer::new(Duration::from_secs_f64(1.0 / 120.0), TimerMode::Repeating),
+        })
         .add_plugins(PixelBufferPlugins)
         .add_startup_system(
             PixelBufferBuilder::new()
                 .with_size(pixel_buffer_size)
                 .with_render(false)
-                .setup()
+                .setup(),
         )
         .add_startup_system(audio_setup::setup_audio_system)
         .add_system(keyboard::keyboard_system)
