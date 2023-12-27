@@ -1,17 +1,23 @@
 use std::time::Duration;
 
-use bevy::{prelude::{ScanCode, KeyCode, ResMut, Res, Input, EventReader}, input::keyboard::KeyboardInput};
-use crate::{config::{NUM_KEYS, DELTA_S}, resources::chip8::{Chip8, KeyState}};
+use crate::{
+    config::{DELTA_S, NUM_KEYS},
+    resources::chip8::{Chip8, KeyState},
+};
+use bevy::{
+    input::keyboard::KeyboardInput,
+    prelude::{EventReader, Input, KeyCode, Res, ResMut},
+};
 
 use scancode::Scancode;
 
 /// Key mapping from real keyboard to CHIP-8s input.
-/// 
+///
 /// Mapping uses scancodes in order to support different
 /// keyboard layouts.
-/// 
+///
 /// For the QWERTY layout the mapping looks like this:
-/// 
+///
 ///      (real)               (chip-8)
 /// -----------------    -----------------
 /// | 1 | 2 | 3 | 4 |    | 1 | 2 | 3 | C |
@@ -41,49 +47,48 @@ use scancode::Scancode;
 //     47, // F => V
 // ];
 
-const KEY_MAP : [Scancode; NUM_KEYS]= [
-    Scancode::X, // 0 => X
-    Scancode::Num1,  // 1 => 1
-    Scancode::Num2,  // 2 => 2
-    Scancode::Num3,  // 3 => 3
-    Scancode::Q, // 4 => Q
-    Scancode::W, // 5 => W
-    Scancode::E, // 6 => E
-    Scancode::A, // 7 => A
-    Scancode::S, // 8 => S
-    Scancode::D, // 9 => D
-    Scancode::Z, // A => Z
-    Scancode::C, // B => C
-    Scancode::Num4,  // C => 4
-    Scancode::R, // D => R
-    Scancode::F, // E => F
-    Scancode::V, // F => V
+const KEY_MAP: [Scancode; NUM_KEYS] = [
+    Scancode::X,    // 0 => X
+    Scancode::Num1, // 1 => 1
+    Scancode::Num2, // 2 => 2
+    Scancode::Num3, // 3 => 3
+    Scancode::Q,    // 4 => Q
+    Scancode::W,    // 5 => W
+    Scancode::E,    // 6 => E
+    Scancode::A,    // 7 => A
+    Scancode::S,    // 8 => S
+    Scancode::D,    // 9 => D
+    Scancode::Z,    // A => Z
+    Scancode::C,    // B => C
+    Scancode::Num4, // C => 4
+    Scancode::R,    // D => R
+    Scancode::F,    // E => F
+    Scancode::V,    // F => V
 ];
 
 /// Simple input handling system
 pub fn keyboard_system(
     mut chip8_res: ResMut<Chip8>,
-    keys: Res<Input<ScanCode>>,
     keycodes: Res<Input<KeyCode>>,
-    mut key_evr: EventReader<KeyboardInput>
+    mut key_evr: EventReader<KeyboardInput>,
 ) {
     use bevy::input::ButtonState;
 
-    for ev in key_evr.iter() {
+    for ev in key_evr.read() {
         match ev.state {
             ButtonState::Released => {
-                if let Some(sc ) = Scancode::new(ev.scan_code as u8) {
-                    for i in 0..NUM_KEYS {
-                        if sc == KEY_MAP[i] {
+                if let Some(sc) = Scancode::new(ev.scan_code as u8) {
+                    for (i, key) in KEY_MAP.iter().enumerate() {
+                        if sc == *key {
                             chip8_res.input[i] = KeyState::JustReleased;
                         }
                     }
                 }
             }
             ButtonState::Pressed => {
-                if let Some(sc ) = Scancode::new(ev.scan_code as u8) {
-                    for i in 0..NUM_KEYS {
-                        if sc == KEY_MAP[i] {
+                if let Some(sc) = Scancode::new(ev.scan_code as u8) {
+                    for (i, key) in KEY_MAP.iter().enumerate() {
+                        if sc == *key {
                             chip8_res.input[i] = KeyState::Pressed;
                         }
                     }
@@ -96,3 +101,4 @@ pub fn keyboard_system(
         chip8_res.step(Duration::from_secs_f64(DELTA_S));
     }
 }
+
