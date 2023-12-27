@@ -9,7 +9,10 @@ pub fn setup_audio_system(mut commands: Commands, asset_server: Res<AssetServer>
     commands.spawn((
         AudioBundle {
             source: asset_server.load("sounds/c_major.wav"),
-            ..default()
+            settings: PlaybackSettings {
+                paused: true,
+                ..Default::default()
+            },
         },
         Beep,
     ));

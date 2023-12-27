@@ -528,12 +528,12 @@ impl Chip8 {
         self.timer_60hz.tick(delta);
 
         let mut drawn = false;
-        if self.state == ConsoleState::Paused || self.timer_clock.just_finished() {
+        if self.state == ConsoleState::Paused || self.timer_clock.finished() {
             let instr = self.fetch();
             drawn = self.execute(instr);
         }
 
-        if self.state == ConsoleState::Paused || self.timer_60hz.just_finished() {
+        if self.state == ConsoleState::Paused || self.timer_60hz.finished() {
             if self.delay_timer > 0 {
                 self.delay_timer -= 1;
             }

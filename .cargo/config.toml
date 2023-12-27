@@ -1,2 +1,2 @@
 [env]
-WGPU_BACKEND = "metal"
+WGPU_BACKEND = "vulkan"

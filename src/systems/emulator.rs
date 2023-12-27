@@ -43,15 +43,16 @@ pub fn emulator_system(
     mut pb: QueryPixelBuffer,
     mut chip8_resource: ResMut<Chip8>,
     mut timer_resource: ResMut<DrawTimer>,
+    cfg: ResMut<ConfigResource>,
     beep: Query<&AudioSink, With<Beep>>,
-    cfg: Res<ConfigResource>,
 ) {
+    let delta = Duration::from_secs_f64(DELTA_S);
+
     let mut res = StepResult {
         drawn: false,
         beep: false,
     };
 
-    let delta = Duration::from_secs_f64(DELTA_S);
     if !chip8_resource.paused() {
         res = chip8_resource.as_mut().step(delta);
     }

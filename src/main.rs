@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use bevy::time::common_conditions::on_timer;
+use bevy::time::*;
 use bevy::{prelude::*, window::WindowResizeConstraints};
 use bevy_egui::EguiPlugin;
 use bevy_pixel_buffer::prelude::*;
@@ -45,6 +45,7 @@ fn main() -> std::io::Result<()> {
             ..default()
         }))
         .add_plugins(EguiPlugin)
+        .add_plugins(PixelBufferPlugins)
         .insert_resource(Chip8::new(600, debug))
         .insert_resource(ConfigResource {
             debug_ui: debug,
@@ -56,7 +57,7 @@ fn main() -> std::io::Result<()> {
         .insert_resource(DrawTimer {
             timer: Timer::new(Duration::from_secs_f64(1.0 / 120.0), TimerMode::Repeating),
         })
-        .add_plugins(PixelBufferPlugins)
+        .insert_resource(Time::<Fixed>::from_seconds(DELTA_S))
         .add_systems(
             Startup,
             (
@@ -67,15 +68,10 @@ fn main() -> std::io::Result<()> {
                 audio::setup_audio_system,
             ),
         )
+        .add_systems(FixedUpdate, emulator::emulator_system)
         .add_systems(
             Update,
-            (
-                keyboard::keyboard_system,
-                ui::ui_system.in_set(ui::UiSet),
-                emulator::emulator_system
-                    .before(ui::UiSet)
-                    .run_if(on_timer(Duration::from_secs_f64(DELTA_S))),
-            ),
+            (keyboard::keyboard_system, ui::ui_system.in_set(ui::UiSet)),
         )
         .run();
 

@@ -2,33 +2,33 @@ use std::ops::Range;
 
 /// Chip-8's Config
 /// Display
-pub const DISPLAY_WIDTH : u32 = 64;
-pub const DISPLAY_HEIGHT : u32 = 32;
-pub const PIXEL_SIZE : u32 = 10;
+pub const DISPLAY_WIDTH: u32 = 64;
+pub const DISPLAY_HEIGHT: u32 = 32;
+pub const PIXEL_SIZE: u32 = 10;
 
 /// Memory sizes
-pub const RAM_SIZE : usize = 4096;
-pub const STACK_SIZE : usize = 16;
-pub const REGISTER_COUNT : usize = 16;
+pub const RAM_SIZE: usize = 4096;
+pub const STACK_SIZE: usize = 16;
+pub const REGISTER_COUNT: usize = 16;
 
 /// Input related
-pub const NUM_KEYS : usize = 16;
+pub const NUM_KEYS: usize = 16;
 
 /// Window size
-pub const WIDTH :u32 = 1366; // DISPLAY_WIDTH * PIXEL_SIZE;
-pub const HEIGHT : u32 = 768; // DISPLAY_HEIGHT * PIXEL_SIZE;
+pub const WIDTH: u32 = 1366; // DISPLAY_WIDTH * PIXEL_SIZE;
+pub const HEIGHT: u32 = 768; // DISPLAY_HEIGHT * PIXEL_SIZE;
 
 /// Emulation maximum clock
-pub const CHIP8_CPU_MAX_CLOCK_HZ : u32 = 2000;
+pub const CHIP8_CPU_MAX_CLOCK_HZ: u32 = 2000;
 
 /// Delta time for each frame in seconds.
-pub const DELTA_S : f64 = 1.0 / CHIP8_CPU_MAX_CLOCK_HZ as f64;
+pub const DELTA_S: f64 = 1.0 / CHIP8_CPU_MAX_CLOCK_HZ as f64;
 
 /// Starting programm address in Chip8's RAM.
-pub const START_PC : usize = 0x200;
+pub const START_PC: usize = 0x200;
 
 /// Font used by Chip8. Change for something more fancy
-pub const FONT : [u8; 5 * 16] = [
+pub const FONT: [u8; 5 * 16] = [
     0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
     0x20, 0x60, 0x20, 0x20, 0x70, // 1
     0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
@@ -44,7 +44,8 @@ pub const FONT : [u8; 5 * 16] = [
     0xF0, 0x80, 0x80, 0x80, 0xF0, // C
     0xE0, 0x90, 0x90, 0x90, 0xE0, // D
     0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
-    0xF0, 0x80, 0xF0, 0x80, 0x80  // F
+    0xF0, 0x80, 0xF0, 0x80, 0x80, // F
 ];
 /// Address range for Chip8's font
-pub const FONT_RANGE : Range<usize> = 0x50..0xA0;
+pub const FONT_RANGE: Range<usize> = 0x50..0xA0;
+
